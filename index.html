@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Chatbot</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: #f0f2f5;
+        }
+        .main {
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 80%;
+            max-width: 600px;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .main h1 {
+            background-color: #007bff;
+            color: white;
+            text-align: center;
+            border-radius: 8px;
+            padding: 10px;
+            margin: -20px -20px 20px -20px;
+        }
+        .chat-history {
+            height: 400px;
+            overflow-y: auto;
+            margin-bottom: 10px;
+        }
+        .chat-bubble {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 10px;
+        }
+        .user-avatar, .bot-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        .user-avatar {
+            background-color: #007bff;
+        }
+        .bot-avatar {
+            background-color: #6c757d;
+        }
+        .ques {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            font-size: 1.1rem;
+            border-radius: 8px;
+            padding: 10px;
+        }
+        .ans {
+            background-color: #d4edda;
+            color: #155724;
+            font-size: 1.1rem;
+            border-radius: 8px;
+            padding: 10px;
+        }
+        .chat-input {
+            display: flex;
+            justify-content: space-between;
+        }
+        .chat-input input {
+            width: 85%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            box-sizing: border-box;
+        }
+        .chat-input button {
+            width: 12%;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 10px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="main">
+        <h1>Interactive Chatbot</h1>
+        <div class="chat-history" id="chat-history"></div>
+        <div class="chat-input">
+            <input type="text" id="text" placeholder="Type your message here..." aria-label="Type your message here">
+            <button onclick="textGenTextOnlyPrompt()" role="button" aria-label="Send Message">Send</button>
+        </div>
+    </div>
+    <script>
+        document.getElementById("text").focus();
+
+        function textGenTextOnlyPrompt() {
+            const userText = document.getElementById("text").value.trim();
+            if (userText === "") {
+                alert("Please enter a message before sending.");
+                return;
+            }
+
+            fetch("/get", {
+                method: "post",
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text: userText })
+            })
+            .then(response => response.json())
+            .then(data => {
+                appendMessage(userText, data.data);
+                document.getElementById("text").value = "";
+                document.getElementById("text").focus();
+            })
+            .catch(error => {
+                console.log(error);
+                appendMessage(userText, "Error: Unable to get a response. Please try again.");
+            });
+        }
+
+        function appendMessage(userText, botText) {
+            const chatHistory = document.getElementById("chat-history");
+            
+            const userMessage = document.createElement("div");
+            userMessage.classList.add("chat-bubble");
+            userMessage.innerHTML = `
+                <div class="user-avatar"></div>
+                <div class="ques">${userText}</div>
+            `;
+
+            const botResponse = document.createElement("div");
+            botResponse.classList.add("chat-bubble");
+            botResponse.innerHTML = `
+                <div class="bot-avatar"></div>
+                <div class="ans">${botText}</div>
+            `;
+
+            chatHistory.appendChild(userMessage);
+            chatHistory.appendChild(botResponse);
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+        }
+
+        document.getElementById("text").addEventListener("keypress", function(event) {
+            if (event.key === "Enter") {
+                textGenTextOnlyPrompt();
+            }
+        });
+    </script>
+</body>
+</html>
